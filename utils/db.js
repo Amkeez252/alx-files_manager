@@ -6,13 +6,18 @@ class DBClient {
     const dbPort = process.env.DB_PORT || 27017;
     const dbName = process.env.DB_DATABASE || 'files_manager';
 
-    this.client = new MongoClient(`mongodb://${dbHost}:${dbPort}`, { useNewUrlParser: true, useUnifiedTopology: true });
+    // MongoDB connection URL
+    const url = `mongodb://${dbHost}:${dbPort}/${dbName}`;
 
+    // Create a new MongoClient
+    this.client = new MongoClient(url, { useNewUrlParser: true, useUnifiedTopology: true });
+
+    // Connect to the MongoDB server
     this.client.connect()
       .then(() => {
         console.log('Connected to MongoDB');
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('Error connecting to MongoDB:', err);
       });
   }
