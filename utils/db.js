@@ -1,50 +1,44 @@
-const { MongoClient } = require('mongodb');
+// utils/db.js
+
+import { MongoClient } from 'mongodb';
 
 class DBClient {
   constructor() {
-    this.host = process.env.DB_HOST || 'localhost';
-    this.port = process.env.DB_PORT || 27017;
-    this.database = process.env.DB_DATABASE || 'files_manager';
-    this.url = `mongodb://${this.host}:${this.port}/${this.database}`;
-    this.client = new MongoClient(this.url, { useUnifiedTopology: true });
+    const {
+      DB_HOST = 'localhost',
+      DB_PORT = 27017,
+      DB_DATABASE = 'files_manager',
+    } = process.env;
+
+    this.client = new MongoClient(`mongodb://${DB_HOST}:${DB_PORT}`);
+    this.dbName = DB_DATABASE;
+    this.db = null;
   }
 
   async isAlive() {
     try {
       await this.client.connect();
+      this.db = this.client.db(this.dbName);
       return true;
     } catch (error) {
       return false;
-    } finally {
-      await this.client.close();
     }
   }
 
   async nbUsers() {
-    try {
-      await this.client.connect();
-      const db = this.client.db(this.database);
-      const usersCollection = db.collection('users');
-      const count = await usersCollection.countDocuments();
-      return count;
-    } finally {
-      await this.client.close();
-    }
+    if (!this.db) await this.isAlive();
+    const usersCollection = this.db.collection('users');
+    const count = await usersCollection.countDocuments();
+    return count;
   }
 
   async nbFiles() {
-    try {
-      await this.client.connect();
-      const db = this.client.db(this.database);
-      const filesCollection = db.collection('files');
-      const count = await filesCollection.countDocuments();
-      return count;
-    } finally {
-      await this.client.close();
-    }
+    if (!this.db) await this.isAlive();
+    const filesCollection = this.db.collection('files');
+    const count = await filesCollection.countDocuments();
+    return count;
   }
 }
 
 const dbClient = new DBClient();
-
-module.exports = dbClient;
+export default dbClient;
